@@ -1,0 +1,11 @@
+# PHP / Web project ignores
+vendor/
+node_modules/
+uploads/
+.DS_Store
+Thumbs.db
+.env
+.idea/
+.vscode/
+*.log
+
