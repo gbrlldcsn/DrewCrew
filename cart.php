@@ -40,32 +40,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
         $quantity = max(1, (int)($_POST['quantity'] ?? 1));
         if ($productId) {
-            $stmt = $conn->prepare('SELECT id FROM products WHERE id = ? LIMIT 1');
+            // Add stock column if it doesn't exist
+            $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0");
+            
+            $stmt = $conn->prepare('SELECT id, stock FROM products WHERE id = ? LIMIT 1');
             $stmt->bind_param('i', $productId);
             $stmt->execute();
-            $stmt->store_result();
-            if ($stmt->num_rows === 1) {
-                $cart[$productId] = ($cart[$productId] ?? 0) + $quantity;
-                $_SESSION['cart_alert'] = ['type' => 'success', 'message' => 'Product added to cart.'];
+            $result = $stmt->get_result();
+            $product = $result ? $result->fetch_assoc() : null;
+            $stmt->close();
+            
+            if ($product) {
+                $stock = (int)($product['stock'] ?? 0);
+                $currentCartQty = $cart[$productId] ?? 0;
+                $totalNeeded = $currentCartQty + $quantity;
+                
+                if ($stock <= 0) {
+                    $_SESSION['cart_alert'] = ['type' => 'danger', 'message' => 'Product is out of stock.'];
+                } elseif ($totalNeeded > $stock) {
+                    $_SESSION['cart_alert'] = ['type' => 'warning', 'message' => "Only {$stock} item(s) available in stock."];
+                } else {
+                    $cart[$productId] = $totalNeeded;
+                    $_SESSION['cart_alert'] = ['type' => 'success', 'message' => 'Product added to cart.'];
+                }
             } else {
                 $_SESSION['cart_alert'] = ['type' => 'danger', 'message' => 'Product not found.'];
             }
-            $stmt->close();
         }
         header('Location: cart.php');
         exit();
     }
     if ($action === 'update' && isset($_POST['quantities']) && is_array($_POST['quantities'])) {
+        // Add stock column if it doesn't exist
+        $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0");
+        
+        $hasError = false;
         foreach ($_POST['quantities'] as $pid => $qty) {
             $pid = (int)$pid;
             $qty = max(0, (int)$qty);
+            
+            if ($qty > 0) {
+                // Check stock availability
+                $stmt = $conn->prepare('SELECT stock FROM products WHERE id = ? LIMIT 1');
+                $stmt->bind_param('i', $pid);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $product = $result ? $result->fetch_assoc() : null;
+                $stmt->close();
+                
+                if ($product) {
+                    $stock = (int)($product['stock'] ?? 0);
+                    if ($qty > $stock) {
+                        $_SESSION['cart_alert'] = ['type' => 'warning', 'message' => "Only {$stock} item(s) available for product ID {$pid}."];
+                        $hasError = true;
+                        $qty = $stock; // Set to max available
+                    }
+                }
+            }
+            
             if ($qty <= 0) {
                 unset($cart[$pid]);
             } else {
                 $cart[$pid] = $qty;
             }
         }
-        $_SESSION['cart_alert'] = ['type' => 'success', 'message' => 'Cart updated.'];
+        
+        if (!$hasError) {
+            $_SESSION['cart_alert'] = ['type' => 'success', 'message' => 'Cart updated.'];
+        }
         header('Location: cart.php');
         exit();
     }
@@ -83,8 +125,9 @@ $total = 0.0;
 if (!empty($cart)) {
     $placeholders = implode(',', array_fill(0, count($cart), '?'));
     $types = str_repeat('i', count($cart));
-    $stmt = $conn->prepare("SELECT id, name, price, image FROM products WHERE id IN ($placeholders)");
-    $stmt->bind_param($types, ...array_keys($cart));
+    $cartKeys = array_keys($cart);
+    $stmt = $conn->prepare("SELECT id, name, price, image, stock FROM products WHERE id IN ($placeholders)");
+    $stmt->bind_param($types, ...$cartKeys);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
@@ -171,7 +214,6 @@ include __DIR__ . '/includes/header.php';
             </form>
             <div>
                 <a href="/DrewCrew/shop.php" class="btn btn-outline-dark me-2">Continue Shopping</a>
-                <a href="#" class="btn btn-gold disabled">Checkout (coming soon)</a>
             </div>
         </div>
     <?php endif; ?>

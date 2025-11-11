@@ -1,14 +1,14 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 function require_login() {
 if (!isset($_SESSION['user'])) {
-header('Location: /drewcrew/login.php');
+header('Location: /DrewCrew/login.php');
 exit();
 }
 }
 function require_admin() {
 if (!isset($_SESSION['user']) || ($_SESSION['role'] ?? '') !== 'admin') {
-header('Location: /drewcrew/login.php');
+header('Location: /DrewCrew/login.php');
 exit();
 }
 }

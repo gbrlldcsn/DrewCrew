@@ -10,9 +10,12 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 // Determine prefix so assets path resolves correctly whether header is included from root or from /admin/
 $script = $_SERVER['SCRIPT_NAME']; // e.g. /DrewCrew/home.php or /DrewCrew/admin/products.php
 $asset_prefix = (strpos($script, '/admin/') !== false) ? '../' : '';
+$is_admin_page = (strpos($script, '/admin/') !== false);
+$is_login_page = (strpos($script, 'login.php') !== false);
+$is_account_page = (strpos($script, 'account.php') !== false);
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"<?php echo $is_admin_page ? ' class="admin-page"' : ''; ?>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -27,10 +30,42 @@ $asset_prefix = (strpos($script, '/admin/') !== false) ? '../' : '';
     .navbar-custom { background-color: rgba(255,255,255,0.85); backdrop-filter: blur(6px); padding-top: 0; padding-bottom: 0; overflow: visible; border-bottom: 1px solid rgba(0,0,0,0.06); }
     .navbar-custom .container { min-height: 56px; position: relative; display: flex; align-items: center; justify-content: space-between; }
     .navbar-brand, .nav-link { color: #000 !important; }
-    .nav-link { padding: 0.5rem 1rem !important; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .nav-link:hover { color: #FFD700 !important; }
-    .btn-gold { background-color: #FFD700; color:#000; font-weight:700; }
-    .btn-gold:hover { background-color:#e6c200; }
+    .nav-link { 
+        padding: 0.5rem 1rem !important; 
+        font-size: 0.95rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .nav-link:hover {
+        color: #FFD700 !important;
+    }
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: #FFD700;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateX(-50%);
+    }
+    .nav-link:active::after {
+        width: 80%;
+    }
+    .btn-gold { 
+        background-color: #FFD700; 
+        color:#000; 
+        font-weight:700; 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+    }
+    .btn-gold:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 4px rgba(255, 215, 0, 0.3);
+    }
     .drewcrew-logo { height:80px; width:auto; object-fit:contain; display:block; margin-top:-8px; margin-bottom:-8px; }
     @media (max-width:576px){ .drewcrew-logo{ height:56px; } }
     .icon-link img { height: 22px; width: 22px; display:inline-block; vertical-align:middle; }
@@ -43,7 +78,41 @@ $asset_prefix = (strpos($script, '/admin/') !== false) ? '../' : '';
     }
   </style>
 </head>
-<body>
+<body<?php 
+    $body_class = '';
+    if ($is_admin_page) $body_class = 'admin-page';
+    if ($is_login_page) $body_class = 'login-page';
+    if ($is_account_page) $body_class = 'account-page';
+    echo $body_class ? ' class="' . $body_class . '"' : '';
+?>>
+<?php if ($is_admin_page): ?>
+<style>
+html {
+    height: 100% !important;
+}
+body.admin-page {
+    height: 100% !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+body.admin-page > nav {
+    flex-shrink: 0 !important;
+}
+body.admin-page > .container.mt-4 {
+    flex: 1 1 auto !important;
+    min-height: calc(100vh - 150px) !important;
+    padding-bottom: 3rem !important;
+}
+body.admin-page footer,
+body.admin-page > footer,
+body.admin-page .admin-footer {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+}
+</style>
+<?php endif; ?>
 <nav class="navbar navbar-expand-lg navbar-custom">
   <div class="container">
     <div class="left-tools">
@@ -83,10 +152,6 @@ $asset_prefix = (strpos($script, '/admin/') !== false) ? '../' : '';
       </ul>
 
       <ul class="navbar-nav navbar-nav-right">
-        <?php if($role === 'admin'): ?>
-          <li class="nav-item"><a class="nav-link" href="/DrewCrew/admin/AdminDashboard.php">Admin</a></li>
-        <?php endif; ?>
-
         <li class="nav-item position-relative">
           <a class="nav-link icon-link" href="/DrewCrew/cart.php" title="Cart">
             <img src="/DrewCrew/assets/icons/shopping-cart.png" alt="Cart">
@@ -98,15 +163,15 @@ $asset_prefix = (strpos($script, '/admin/') !== false) ? '../' : '';
 
         <?php if($user): ?>
           <li class="nav-item">
-            <a class="nav-link icon-link" href="/DrewCrew/account.php" title="My Account">
-              <img src="/DrewCrew/assets/icons/person-fill.svg" alt="Account">
+            <a class="nav-link icon-link" href="<?php echo ($role === 'admin') ? '/DrewCrew/admin/AdminDashboard.php' : '/DrewCrew/account.php'; ?>" title="<?php echo ($role === 'admin') ? 'Admin Dashboard' : 'My Account'; ?>">
+              <img src="<?php echo $asset_prefix; ?>assets/icons/person-fill.svg" alt="<?php echo ($role === 'admin') ? 'Admin' : 'Account'; ?>">
             </a>
           </li>
           <li class="nav-item"><a class="btn btn-gold" href="/DrewCrew/logout.php">Logout</a></li>
         <?php else: ?>
           <li class="nav-item">
             <a class="nav-link icon-link" href="/DrewCrew/login.php" title="Login">
-              <img src="/DrewCrew/assets/icons/person-fill.svg" alt="Login">
+              <img src="<?php echo $asset_prefix; ?>assets/icons/person-fill.svg" alt="Login">
             </a>
           </li>
         <?php endif; ?>

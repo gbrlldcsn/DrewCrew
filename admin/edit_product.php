@@ -62,12 +62,17 @@ if (isset($_POST['save'])) {
         }
     }
 
+    $stock = isset($_POST['stock']) ? max(0, (int)$_POST['stock']) : (int)($product['stock'] ?? 0);
+    
+    // Add stock column if it doesn't exist
+    $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0");
+
     validate_required($name, 'Name', $errors);
     validate_positive($price, 'Price', $errors);
 
     if (empty($errors)) {
-        $stmt = $conn->prepare('UPDATE products SET category_id = ?, name = ?, price = ?, size = ?, description = ?, image = ? WHERE id = ?');
-        $stmt->bind_param('isdsssi', $category_id, $name, $price, $size, $description, $imageName, $id);
+        $stmt = $conn->prepare('UPDATE products SET category_id = ?, name = ?, price = ?, size = ?, description = ?, image = ?, stock = ? WHERE id = ?');
+        $stmt->bind_param('isdsssii', $category_id, $name, $price, $size, $description, $imageName, $stock, $id);
         if ($stmt->execute()) {
             header('Location: products.php?status=updated');
             exit();
@@ -118,6 +123,12 @@ $cats = $conn->query('SELECT * FROM categories');
     <div class="mb-3">
         <label class="form-label">Size</label>
         <input type="text" name="size" class="form-control" value="<?php echo htmlspecialchars($product['size']); ?>">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Stock</label>
+        <input type="number" name="stock" class="form-control" value="<?php echo (int)($product['stock'] ?? 0); ?>" min="0" required>
+        <div class="form-text">Current stock quantity</div>
     </div>
 
     <div class="mb-3">

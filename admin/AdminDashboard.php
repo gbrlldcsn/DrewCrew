@@ -33,6 +33,7 @@ $total_users = $conn->query('SELECT COUNT(*) as c FROM users')->fetch_assoc()['c
 <hr class="my-4">
 <a href="products.php" class="btn btn-outline-dark">Manage Products</a>
 <a href="add_product.php" class="btn btn-primary">Add Product</a>
+<a href="manage_stocks.php" class="btn btn-outline-primary">Manage Stocks</a>
 <a href="users.php" class="btn btn-secondary">Manage Users</a>
 
 <?php include '../includes/footer.php'; ?>

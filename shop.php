@@ -130,11 +130,24 @@ if ($stmt = $conn->prepare($sql)) {
                             <div class="product-title"><?php echo htmlspecialchars($product['name']); ?></div>
                         </a>
                         <div class="product-price">₱<?php echo number_format($product['price'], 2); ?></div>
+                        <?php 
+                        $stock = (int)($product['stock'] ?? 0);
+                        $isOutOfStock = $stock <= 0;
+                        ?>
+                        <div class="product-stock mb-2" style="font-size: 0.85rem;">
+                            <?php if ($isOutOfStock): ?>
+                                <span style="color: #ff4444; font-weight: 600;">SOLD OUT</span>
+                            <?php else: ?>
+                                <span style="color: #00ff00; font-weight: 600;">Stock: <?php echo $stock; ?></span>
+                            <?php endif; ?>
+                        </div>
                         <form method="POST" action="/DrewCrew/cart.php" class="mt-3">
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="product_id" value="<?php echo (int)$product['id']; ?>">
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-gold btn-sm w-100">Add to Cart</button>
+                            <button type="submit" class="btn btn-gold btn-sm w-100" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+                                <?php echo $isOutOfStock ? 'Sold Out' : 'Add to Cart'; ?>
+                            </button>
                         </form>
                     </div>
                 </div>

@@ -1,10 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&display=swap');
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    display: flex;
+    flex-direction: column;
+}
+
 body {
     font-family: 'Inter', 'Roboto', sans-serif;
     line-height: 1.6;
     color: #111;
     background: url('/DrewCrew/assets/img/newBackground.jpg') center top / cover no-repeat fixed;
+    position: relative;
+}
+
+/* General footer positioning - but NOT for admin pages (they have their own rules) */
+body:not(.admin-page):not(.login-page):not(.account-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body:not(.admin-page):not(.login-page):not(.account-page) > .container {
+    flex: 1 1 auto;
+}
+
+body:not(.admin-page):not(.login-page):not(.account-page) footer {
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+/* Ensure nav doesn't interfere with flexbox */
+body > nav {
+    flex-shrink: 0;
+}
+
+/* Ensure nav doesn't interfere with flexbox on admin, login, and account pages */
+body.admin-page > nav,
+body.login-page > nav,
+body.account-page > nav {
+    flex-shrink: 0;
 }
 
 /* Product grid styles (card look similar to reference) */
@@ -54,15 +94,180 @@ button, input, select, textarea {
     font-family: inherit;
 }
 
+.btn {
+    --btn-base-color: #000;
+    --btn-text-color: #fff;
+    --btn-rounded-color: #00F0B5;
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--btn-text-color);
+    border: none;
+}
+
+.btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--btn-base-color, #000);
+    z-index: -1;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(1);
+}
+
+.btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+    z-index: 0;
+}
+
+.btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+.btn:active::before {
+    transform: scale(0.98);
+}
+
+.btn .btn-text,
+.btn .text-green {
+    position: relative;
+    z-index: 1;
+    mix-blend-mode: difference;
+}
+
+.btn.rounded {
+    border-radius: 50px;
+}
+
+.btn.rounded::before {
+    width: 100%;
+    border-radius: 50px;
+    background: var(--btn-rounded-color, #00F0B5);
+}
+
+.btn.rounded .text-green {
+    color: var(--btn-rounded-color);
+}
+
 .container .btn-outline-dark,
 .container .btn-outline-secondary {
-    color: #f8f9fa;
-    border-color: rgba(255,255,255,0.6);
+    --btn-text-color: #000;
+    border: 2px solid rgba(255,255,255,0.6);
+    background: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #000 !important;
 }
-.container .btn-outline-dark:hover,
-.container .btn-outline-secondary:hover {
-    color: #000;
-    background-color: #f8f9fa;
+
+.container .btn-outline-dark:active,
+.container .btn-outline-secondary:active {
+    border-color: rgba(255,255,255,0.9);
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    transform: translateY(1px);
+}
+
+.btn-gold {
+    --btn-base-color: #FFD700;
+    --btn-text-color: #000;
+    font-weight: 700;
+}
+
+.btn-outline-dark {
+    --btn-base-color: rgba(248, 249, 250, 0.95);
+    --btn-text-color: #000;
+    color: #000 !important;
+}
+
+.btn-outline-secondary {
+    --btn-base-color: rgba(248, 249, 250, 0.75);
+    --btn-text-color: #000;
+    color: #000 !important;
+}
+
+/* Footer sticky to bottom - ONLY for admin pages */
+html.admin-page {
+    height: 100% !important;
+}
+
+html.admin-page body.admin-page {
+    height: 100% !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.admin-page > nav {
+    flex-shrink: 0 !important;
+}
+
+body.admin-page > .container.mt-4 {
+    flex: 1 1 auto !important;
+    min-height: calc(100vh - 150px) !important;
+    padding-bottom: 3rem !important;
+}
+
+body.admin-page footer,
+body.admin-page > footer,
+body.admin-page .admin-footer {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+}
+
+/* Footer sticky to bottom - ONLY for login page */
+body.login-page {
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.login-page > .container {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+body.login-page > footer {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+}
+
+/* Footer sticky to bottom - ONLY for account page */
+body.account-page {
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.account-page > .container {
+    flex: 1 1 auto;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+body.account-page .account-dashboard {
+    flex: 1;
+    min-height: 0;
+}
+
+body.account-page > footer {
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
 }
 
 

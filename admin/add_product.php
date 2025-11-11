@@ -49,12 +49,17 @@ if (isset($_POST['save'])) {
         }
     }
 
+    $stock = isset($_POST['stock']) ? max(0, (int)$_POST['stock']) : 0;
+    
+    // Add stock column if it doesn't exist
+    $conn->query("ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 0");
+
     validate_required($name, 'Name', $errors);
     validate_positive($price, 'Price', $errors);
 
     if (empty($errors)) {
-        $stmt = $conn->prepare('INSERT INTO products (category_id, name, price, size, description, image) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->bind_param('isdsss', $category_id, $name, $price, $size, $description, $imageName);
+        $stmt = $conn->prepare('INSERT INTO products (category_id, name, price, size, description, image, stock) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt->bind_param('isdsssi', $category_id, $name, $price, $size, $description, $imageName, $stock);
         $stmt->execute();
         header('Location: products.php');
         exit();
@@ -67,7 +72,7 @@ $cats = $conn->query('SELECT * FROM categories');
 
 <h2>Add Product</h2>
 
-<form method="POST" enctype="multipart/form-data" class="mt-4">
+<form method="POST" enctype="multipart/form-data" class="mt-4" style="padding-bottom: 2rem;">
     <div class="mb-3">
         <label class="form-label">Name</label>
         <input type="text" name="name" class="form-control" required>
@@ -91,6 +96,12 @@ $cats = $conn->query('SELECT * FROM categories');
     <div class="mb-3">
         <label class="form-label">Size</label>
         <input type="text" name="size" class="form-control" placeholder="e.g., S,M,L,XL">
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Stock</label>
+        <input type="number" name="stock" class="form-control" value="0" min="0" required>
+        <div class="form-text">Initial stock quantity</div>
     </div>
     
     <div class="mb-3">

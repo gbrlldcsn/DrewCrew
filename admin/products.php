@@ -15,18 +15,8 @@ if ($status === 'deleted') {
 
 $result = $conn->query('SELECT p.*, c.category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.created_at DESC');
 ?>
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Manage Products - DrewCrew</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/style.css">
-</head>
-<body>
 <?php include '../includes/header.php'; ?>
-<div class="container py-4">
+
 <h2>Products</h2>
 <?php if ($alert): ?>
     <div class="alert alert-<?php echo $alert['type']; ?>">
@@ -44,7 +34,7 @@ $result = $conn->query('SELECT p.*, c.category_name FROM products p LEFT JOIN ca
     <?php endif; ?>
 </div>
 <table class="table table-bordered">
-<thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Image</th><th>Actions</th></tr></thead>
+<thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Image</th><th>Actions</th></tr></thead>
 <tbody>
 <?php while ($row = $result->fetch_assoc()): ?>
 <tr>
@@ -52,6 +42,18 @@ $result = $conn->query('SELECT p.*, c.category_name FROM products p LEFT JOIN ca
 <td><?php echo htmlspecialchars($row['name']); ?></td>
 <td><?php echo htmlspecialchars($row['category_name']); ?></td>
 <td><?php echo number_format($row['price'],2); ?></td>
+<td>
+    <?php 
+    $stock = (int)($row['stock'] ?? 0);
+    $stockClass = $stock <= 0 ? 'danger' : ($stock < 10 ? 'warning' : 'success');
+    ?>
+    <span class="badge bg-<?php echo $stockClass; ?>">
+        <?php echo $stock; ?>
+    </span>
+    <?php if ($stock <= 0): ?>
+        <span class="badge bg-danger ms-1">Sold Out</span>
+    <?php endif; ?>
+</td>
 <td>
 <?php if ($row['image']): ?>
 <img src="../uploads/<?php echo $row['image']; ?>" width="80">
@@ -67,7 +69,5 @@ $result = $conn->query('SELECT p.*, c.category_name FROM products p LEFT JOIN ca
 <?php endwhile; ?>
 </tbody>
 </table>
-</div>
+
 <?php include '../includes/footer.php'; ?>
-</body>
-</html>

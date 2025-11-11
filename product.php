@@ -59,6 +59,19 @@ $src = $img !== '' ? dc_normalize_image_url($img) : '/DrewCrew/assets/products/a
       <h2 class="fw-bold text-white"><?php echo htmlspecialchars($product['name']); ?></h2>
       <div class="mb-3 text-white-50">Category: <?php echo htmlspecialchars($product['category_name'] ?? ''); ?></div>
       <div class="h4 text-primary mb-3">₱<?php echo number_format((float)$product['price'], 2); ?></div>
+      
+      <?php 
+      $stock = (int)($product['stock'] ?? 0);
+      $isOutOfStock = $stock <= 0;
+      ?>
+      <div class="mb-3">
+        <?php if ($isOutOfStock): ?>
+          <span class="badge bg-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">SOLD OUT</span>
+        <?php else: ?>
+          <span class="badge bg-success" style="font-size: 1rem; padding: 0.5rem 1rem;">In Stock: <?php echo $stock; ?> available</span>
+        <?php endif; ?>
+      </div>
+      
       <ul class="mb-4 text-white">
         <?php if (!empty($product['description'])): ?>
           <li><?php echo htmlspecialchars($product['description']); ?></li>
@@ -73,11 +86,13 @@ $src = $img !== '' ? dc_normalize_image_url($img) : '/DrewCrew/assets/products/a
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="product_id" value="<?php echo (int)$product['id']; ?>">
         <div class="input-group" style="width:140px;">
-          <button class="btn btn-outline-secondary" type="button" onclick="var q=document.getElementById('qty'); q.value=Math.max(1, parseInt(q.value||'1')-1)">-</button>
-          <input type="number" id="qty" name="quantity" value="1" min="1" class="form-control text-center">
-          <button class="btn btn-outline-secondary" type="button" onclick="var q=document.getElementById('qty'); q.value=parseInt(q.value||'1')+1">+</button>
+          <button class="btn btn-outline-secondary" type="button" onclick="var q=document.getElementById('qty'); var max=<?php echo $stock; ?>; q.value=Math.max(1, parseInt(q.value||'1')-1); if(max>0) q.setAttribute('max', max);" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>-</button>
+          <input type="number" id="qty" name="quantity" value="1" min="1" max="<?php echo $stock; ?>" class="form-control text-center" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+          <button class="btn btn-outline-secondary" type="button" onclick="var q=document.getElementById('qty'); var max=<?php echo $stock; ?>; var current=parseInt(q.value||'1'); q.value=Math.min(max, current+1); if(max>0) q.setAttribute('max', max);" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>+</button>
         </div>
-        <button type="submit" class="btn btn-dark flex-grow-1">Add to Cart</button>
+        <button type="submit" class="btn btn-dark flex-grow-1" <?php echo $isOutOfStock ? 'disabled' : ''; ?>>
+          <?php echo $isOutOfStock ? 'Sold Out' : 'Add to Cart'; ?>
+        </button>
       </form>
     </div>
   </div>
